@@ -45,7 +45,7 @@ import com.notnoop.mpns.internal.Pair;
  * @param <B>   the type of the generated message
  */
 @SuppressWarnings("unchecked")
-/*package-protected*/ abstract class AbstractNotificationBuilder<A extends AbstractNotificationBuilder<A, B>, B extends MpnsNotification> {
+abstract class AbstractNotificationBuilder<A extends AbstractNotificationBuilder<A, B>, B extends MpnsNotification> {
     protected List<Entry<String, String>> headers = new ArrayList<Entry<String, String>>();
 
     protected AbstractNotificationBuilder() {

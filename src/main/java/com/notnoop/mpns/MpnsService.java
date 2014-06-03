@@ -52,12 +52,13 @@ public interface MpnsService {
      * iPhone of {@code deviceToken}.
      *
      * The payload needs to be a valid JSON object, otherwise it may fail
-     * silently.  It is recommended to use {@link PayloadBuilder} to create
+     * silently.  It is recommended to use {@link MpnsServiceBuilder} to create
      * one.
      *
-     * @param deviceToken   the destination iPhone device token
-     * @param payload       The payload message
-     * @throws NetworkIOException if a network error occured while
+     * @param subscriptionUri   the destination iPhone device token
+     * @param payload       the payload message
+     * @param headers the HTTP headers
+     * @throws NetworkIOException if a network error occurred while
      *      attempting to send the message
      */
     void push(String subscriptionUri, String payload,
@@ -67,7 +68,9 @@ public interface MpnsService {
     /**
      * Sends the provided notification {@code message} to the desired
      * destination.
-     * @throws NetworkIOException if a network error occured while
+     * @param subscriptionUri the push notification URI
+     * @param message the notification message
+     * @throws NetworkIOException if a network error occurred while
      *      attempting to send the message
      */
     void push(String subscriptionUri, MpnsNotification message)
@@ -77,7 +80,7 @@ public interface MpnsService {
      * Starts the service.
      *
      * The underlying implementation may prepare its connections or
-     * datastructures to be able to send the messages.
+     * data structures to be able to send the messages.
      *
      * This method is a blocking call, even if the service represents
      * a Non-blocking push service.  Once the service is returned, it is ready

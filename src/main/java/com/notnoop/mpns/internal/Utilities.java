@@ -38,9 +38,6 @@ import com.notnoop.mpns.MpnsDelegate;
 import com.notnoop.mpns.MpnsNotification;
 import com.notnoop.mpns.MpnsResponse;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 
 public final class Utilities {
@@ -60,8 +57,10 @@ public final class Utilities {
     }
 
     /**
-     * Returns {@cond value} is the {@code cond} is non-null; otherwise
-     * returns an empty String.
+     * Returns {@code value} if the {@code cond} is non-null; otherwise returns an empty String.
+     * @param cond the condition
+     * @param value the value to return if the condition is true
+     * @return see description
      */
     public static String ifNonNull(Object cond, String value) {
         return cond != null ? value : "";

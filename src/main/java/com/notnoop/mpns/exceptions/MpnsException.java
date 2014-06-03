@@ -32,7 +32,7 @@
 package com.notnoop.mpns.exceptions;
 
 /**
- * Base class for all the exceptions thrown in Apns Library
+ * Base class for all the exceptions thrown in Mpns Library
  */
 public abstract class MpnsException extends RuntimeException {
     private static final long serialVersionUID = -4756693306121825229L;

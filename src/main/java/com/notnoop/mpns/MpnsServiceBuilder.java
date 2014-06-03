@@ -124,6 +124,8 @@ public class MpnsServiceBuilder {
     /**
      * Constructs a pool of connections to the notification servers.
      *
+     * @param maxConnections the maximum number of connections
+     * @return this
      */
     public MpnsServiceBuilder asPool(int maxConnections) {
         return asPool(Executors.newFixedThreadPool(maxConnections), maxConnections);
@@ -134,6 +136,9 @@ public class MpnsServiceBuilder {
      *
      * Note: The maxConnections here is used as a hint to how many connections
      * get created.
+     * @param executor the executor
+     * @param maxConnections the maximum number of connections in the pool
+     * @return this
      */
     public MpnsServiceBuilder asPool(ExecutorService executor, int maxConnections) {
         this.pooledMax = maxConnections;

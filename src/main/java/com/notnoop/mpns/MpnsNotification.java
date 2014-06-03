@@ -41,6 +41,7 @@ public interface MpnsNotification {
     /**
      * Returns the binary representation of the payload.
      *
+     * @return the binary representation of the payload
      */
     public byte[] getRequestBody();
 

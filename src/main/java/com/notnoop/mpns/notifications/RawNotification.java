@@ -50,10 +50,12 @@ public class RawNotification implements MpnsNotification {
         this.headers = headers;
     }
 
+    @Override
     public byte[] getRequestBody() {
         return body;
     }
 
+    @Override
     public List<? extends Entry<String, String>> getHttpHeaders() {
         return Collections.unmodifiableList(this.headers);
     }

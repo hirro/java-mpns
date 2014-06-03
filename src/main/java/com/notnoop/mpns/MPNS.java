@@ -33,8 +33,8 @@ package com.notnoop.mpns;
 /**
  * The main class to interact with the MPNS Service.
  *
- * Provides an interface to create the {@link ApnsServiceBuilder} and
- * {@code ApnsNotification} payload.
+ * Provides an interface to create the {@link MpnsServiceBuilder} and
+ * {@code MpnsNotification} payload.
  *
  */
 public class MPNS {
@@ -43,6 +43,7 @@ public class MPNS {
 
     /**
      * Returns a new Payload builder
+     * @return the new Payload builder
      */
     public static MpnsNotificationBuilder newNotification() {
         return new MpnsNotificationBuilder();
@@ -50,6 +51,7 @@ public class MPNS {
 
     /**
      * Returns a new APNS Service for sending iPhone notifications
+     * @return the new APNS Service for sending iPhone notifications
      */
     public static MpnsServiceBuilder newService() {
         return new MpnsServiceBuilder();
