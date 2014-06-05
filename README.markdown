@@ -33,7 +33,7 @@ To send a notification, you can do it in two steps:
 
 2. Create and send the message
 
-        MpnsMessage notification = MPNS.newMessage()
+        MpnsNotification notification = MPNS.newNotification()
             .tile().count(2).title("Tile message")
             .build();
         String subscriptionUri = "https://..../"

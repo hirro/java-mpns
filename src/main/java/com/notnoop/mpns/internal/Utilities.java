@@ -30,30 +30,27 @@
 */
 package com.notnoop.mpns.internal;
 
+import com.notnoop.mpns.MpnsDelegate;
+import com.notnoop.mpns.MpnsNotification;
+import com.notnoop.mpns.MpnsResponse;
+import com.notnoop.mpns.exceptions.InvalidSSLConfig;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.KeyStore;
 import java.util.Enumeration;
-
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.notnoop.mpns.MpnsDelegate;
-import com.notnoop.mpns.MpnsNotification;
-import com.notnoop.mpns.MpnsResponse;
-import com.notnoop.mpns.exceptions.InvalidSSLConfig;
 
 public final class Utilities {
 	private static Logger logger = LoggerFactory.getLogger(Utilities.class);
@@ -64,8 +61,8 @@ public final class Utilities {
      */
     public static String XML_CONTENT_TYPE = "text/xml";
 
-    public static ThreadSafeClientConnManager poolManager(int maxConnections) {
-        ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager();
+    public static PoolingHttpClientConnectionManager poolManager(int maxConnections) {
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(maxConnections);
         cm.setDefaultMaxPerRoute(maxConnections);
 
@@ -119,31 +116,36 @@ public final class Utilities {
 
     private static MpnsResponse[] logicalResponses = MpnsResponse.values();
     public static MpnsResponse logicalResponseFor(HttpResponse response) {
+        
+        // Get the interesting header values
+        final String notificationStatus = headerValue(response, "X-NotificationStatus");
+        final String deviceConnectionStatus = headerValue(response, "X-DeviceConnectionStatus");
+        final String subscriptionStatus = headerValue(response, "X-SubscriptionStatus");
+
         for (MpnsResponse r: logicalResponses) {
             if (r.getResponseCode() != response.getStatusLine().getStatusCode()) {
                 continue;
             }
 
             if (r.getNotificationStatus() != null
-                && !r.getNotificationStatus().equals(headerValue(response, "X-NotificationStatus"))) {
+                && !r.getNotificationStatus().equals(notificationStatus)) {
                 continue;
             }
 
             if (r.getDeviceConnectionStatus() != null
-                && !r.getNotificationStatus().equals(headerValue(response, "X-DeviceConnectionStatus"))) {
+                && !r.getDeviceConnectionStatus().equals(deviceConnectionStatus)) {
                 continue;
             }
 
             if (r.getSubscriptionStatus() != null
-                && !r.getSubscriptionStatus().equals(headerValue(response, "X-SubscriptionStatus"))) {
+                && !r.getSubscriptionStatus().equals(subscriptionStatus)) {
                 continue;
             }
 
             return r;
         }
 
-        // Didn't find anything
-        assert false;
+        // No match found
         return null;
     }
 
@@ -161,15 +163,15 @@ public final class Utilities {
         if (delegate != null) {
             MpnsResponse r = Utilities.logicalResponseFor(response);
 
-            if(r!=null) {
-            if (r.isSuccessful()) {
+            if (r == null) {
+                delegate.error(message, null);
+            } else if (r.isSuccessful()) {
                 delegate.messageSent(message, r);
             } else {
                 delegate.messageFailed(message, r);
             }
         }
     }
-}
     
     public static SSLSocketFactory newSSLSocketFactory(InputStream cert, String password,
     		String ksType, String ksAlgorithm) throws InvalidSSLConfig 
