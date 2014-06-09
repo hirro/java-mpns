@@ -36,32 +36,38 @@ import java.util.Map.Entry;
 /**
  * Represents an MPNS notification to be sent to Microsoft service.
  */
-public interface MpnsNotification {
+public abstract class SynchronizableMpnsNotification implements MpnsNotification {
    
+   private MpnsResponse response;
+
    /**
     * Returns the binary representation of the payload.
     *
     * @return the binary representation of the payload
     */
-   public byte[] getRequestBody();
+   public abstract byte[] getRequestBody();
 
    /**
     * Returns the identifier of the current message. The identifier is an application generated identifier.
     *
     * @return the notification identifier
     */
-   public  List<? extends Entry<String, String>> getHttpHeaders();
+   public abstract List<? extends Entry<String, String>> getHttpHeaders();
 
    /**
     * Placeholder for the response code in case it is required to pass the result back to the caller.
     * @return response code
     */
-   public MpnsResponse getResponse();
+   public MpnsResponse getResponse() {
+      return response;
+   }
 
    /**
     * Placeholder for the response code in case it is required to pass the result back to the caller.
     * @param response response code
     */
-   public void setResponse(MpnsResponse response);
+   public void setResponse(MpnsResponse response) {
+      this.response = response;      
+   }
 
 }

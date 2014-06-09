@@ -1,17 +1,16 @@
 package com.notnoop.mpns.notifications;
 
+import com.notnoop.mpns.DeliveryClass;
+import com.notnoop.mpns.MpnsNotification;
+import com.notnoop.mpns.SynchronizableMpnsNotification;
+import com.notnoop.mpns.internal.Utilities;
 import static com.notnoop.mpns.internal.Utilities.escapeXml;
 import static com.notnoop.mpns.internal.Utilities.ifNonNull;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.notnoop.mpns.DeliveryClass;
-import com.notnoop.mpns.MpnsNotification;
-import com.notnoop.mpns.internal.Utilities;
-
-public class IconicTileNotification implements MpnsNotification {
+public class IconicTileNotification extends SynchronizableMpnsNotification {
 	
 	private final String tileId;
     private final String title;
