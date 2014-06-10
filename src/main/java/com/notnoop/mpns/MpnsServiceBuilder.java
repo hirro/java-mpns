@@ -30,31 +30,40 @@
  */
 package com.notnoop.mpns;
 
-import com.notnoop.mpns.exceptions.InvalidSSLConfig;
-import com.notnoop.mpns.exceptions.RuntimeIOException;
-import com.notnoop.mpns.internal.AbstractMpnsService;
-import com.notnoop.mpns.internal.MpnsPooledService;
-import com.notnoop.mpns.internal.MpnsQueuedService;
-import com.notnoop.mpns.internal.MpnsServiceImpl;
-import com.notnoop.mpns.internal.Utilities;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+
 import org.apache.http.HttpHost;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+
+import com.notnoop.mpns.internal.*;
 
 /**
  * The class is used to create instances of {@link MpnsService}.
  *
- * Note that this class is not synchronized. If multiple threads access a {@code MpnsServiceBuilder} instance
- * concurrently, and at least on of the threads modifies one of the attributes structurally, it must be synchronized
- * externally.
+ * Note that this class is not synchronized.  If multiple threads access a
+ * {@code MpnsServiceBuilder} instance concurrently, and at least on of the
+ * threads modifies one of the attributes structurally, it must be
+ * synchronized externally.
  *
  * Starting a new {@code MpnsService} is easy:
  *
@@ -64,9 +73,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
  * </pre>
  */
 public class MpnsServiceBuilder {
-
-    private SSLContext sslContext;
-
     private int pooledMax = 1;
     private ExecutorService executor = null;
 
@@ -76,51 +82,59 @@ public class MpnsServiceBuilder {
     private int timeout = -1;
 
     private MpnsDelegate delegate;
+    
+    // Authenticated calls
+    private SecurityInfo securityInfo;
+    
+    public static class SecurityInfo {
+    	private byte[] cert;
+    	private String password;
+    	private String name;
+    	private String provider;
+    	
+    	public SecurityInfo(byte[] cert, String password, String securityName, String securityProvider) {
+    		if( cert == null || cert.length == 0 ||
+    				password == null || "".equals(password.trim()) ||
+    				securityName == null || "".equals(securityName.trim()) ) {
+    			// provider is optional
+    			throw new IllegalArgumentException("Please provide certificate, password, and name");
+    		}
+    		this.cert = Arrays.copyOf(cert, cert.length);
+    		this.password = password;
+    		this.name = securityName;
+    		this.provider = securityProvider;
+    	}
+    	
+    	public byte[] getCert() {
+    		return cert;
+    	}
+    	public String getPassword() {
+    		return password;
+    	}
+    	public String getName() {
+    		return name;
+    	}
+    	public String getProvider() {
+    		return provider;
+    	}
+    }
 
     /**
      * Constructs a new instance of {@code MpnsServiceBuilder}
      */
-    public MpnsServiceBuilder() {
-    }
-
-    public MpnsServiceBuilder withCert(String fileName, String password, String ksType, String kAlgo)
-            throws RuntimeIOException, InvalidSSLConfig {
-        FileInputStream stream = null;
-        try {
-            stream = new FileInputStream(fileName);
-            return withCert(stream, password, ksType, kAlgo);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeIOException(e);
-        } finally {
-            Utilities.close(stream);
-        }
-    }
-
-    public MpnsServiceBuilder withCert(InputStream stream, String password, String ksType, String kAlgo)
-            throws InvalidSSLConfig {
-        if (password == null || password.isEmpty()) {
-            throw new IllegalArgumentException("Passwords must be specified."
-                    + "Oracle Java SDK does not support passwordless p12 certificates");
-        }
-
-        return withSSLContext(Utilities.newSSLContext(stream, password, ksType, kAlgo));
-    }
-
-    public MpnsServiceBuilder withSSLContext(SSLContext sslContext) {
-        this.sslContext = sslContext;
-        return this;
-    }
+    public MpnsServiceBuilder() { }
 
     /**
-     * Specify the address of the HTTP proxy the connection should use.
+     * Specify the address of the HTTP proxy the connection should
+     * use.
      *
-     * <p>
-     * Read the <a href="http://java.sun.com/javase/6/docs/technotes/guides/net/proxies.html">
-     * Java Networking and Proxies</a> guide to understand the proxies complexity.
+     * <p>Read the <a href="http://java.sun.com/javase/6/docs/technotes/guides/net/proxies.html">
+     * Java Networking and Proxies</a> guide to understand the
+     * proxies complexity.
      *
-     * @param host the hostname of the HTTP proxy
-     * @param port the port of the HTTP proxy server
-     * @return this
+     * @param host  the hostname of the HTTP proxy
+     * @param port  the port of the HTTP proxy server
+     * @return  this
      */
     public MpnsServiceBuilder withHttpProxy(String host, int port) {
         this.proxy = new HttpHost(host, port);
@@ -143,12 +157,14 @@ public class MpnsServiceBuilder {
 //        this.proxy = proxy;
 //        return this;
 //    }
+
     /**
      * Sets the HttpClient instance along with any configuration
      *
-     * NOTE: This is an advanced option that should be probably be used as a last resort.
+     * NOTE: This is an advanced option that should be probably be used as a
+     * last resort.
      *
-     * @param httpClient the httpClient to be used
+     * @param httpClient    the httpClient to be used
      * @return this
      */
     public MpnsServiceBuilder withHttpClient(HttpClient httpClient) {
@@ -159,8 +175,6 @@ public class MpnsServiceBuilder {
     /**
      * Constructs a pool of connections to the notification servers.
      *
-     * @param maxConnections the maximum number of connections
-     * @return this
      */
     public MpnsServiceBuilder asPool(int maxConnections) {
         return asPool(Executors.newFixedThreadPool(maxConnections), maxConnections);
@@ -169,11 +183,8 @@ public class MpnsServiceBuilder {
     /**
      * Constructs a pool of connections to the notification servers.
      *
-     * Note: The maxConnections here is used as a hint to how many connections get created.
-     *
-     * @param executor the executor
-     * @param maxConnections the maximum number of connections in the pool
-     * @return this
+     * Note: The maxConnections here is used as a hint to how many connections
+     * get created.
      */
     public MpnsServiceBuilder asPool(ExecutorService executor, int maxConnections) {
         this.pooledMax = maxConnections;
@@ -182,19 +193,28 @@ public class MpnsServiceBuilder {
     }
 
     /**
-     * Constructs a new thread with a processing queue to process notification requests.
+     * Constructs a new thread with a processing queue to process
+     * notification requests.
      *
-     * @return this
+     * @return  this
      */
     public MpnsServiceBuilder asQueued() {
         this.isQueued = true;
         return this;
     }
+    
+    /**
+     * Authenticated
+     */
+    public MpnsServiceBuilder asAuthenticated(SecurityInfo securityInfo) {
+    	this.securityInfo = securityInfo;
+    	return this;
+    }
 
     /**
      * Sets the timeout for the connection
      *
-     * @param timeout the time out period in millis
+     * @param   timeout     the time out period in millis
      * @return this
      */
     public MpnsServiceBuilder timeout(int timeout) {
@@ -208,50 +228,59 @@ public class MpnsServiceBuilder {
     }
 
     /**
-     * Returns a fully initialized instance of {@link MpnsService}, according to the requested settings.
+     * Returns a fully initialized instance of {@link MpnsService},
+     * according to the requested settings.
      *
-     * @return a new instance of MpnsService
+     * @return  a new instance of MpnsService
      */
     public MpnsService build() {
         checkInitialization();
 
-        // HTTP Client Configuration
-        HttpClient client = null;
+        // Client Configuration
+        HttpClient client;
         if (httpClient != null) {
-            // XXX Why?
             client = httpClient;
+        } else if (pooledMax == 1) {
+            client = new DefaultHttpClient();
         } else {
-            // Creating a new HTTP client
-            HttpClientBuilder builder = HttpClientBuilder.create();
+            client = new DefaultHttpClient(Utilities.poolManager(pooledMax));
+        }
 
-            // Connection pool settings
-            if (pooledMax != 1) {
-                builder.setConnectionManager(Utilities.poolManager(pooledMax));
-                builder.setMaxConnTotal(pooledMax);
-            }
+        if (proxy != null) {
+            client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+        }
+        
+        if( securityInfo != null ) {
+        	try {
+	        	KeyStore keyStore = null;
+	        	if( securityInfo.getProvider() == null ) {
+	        		keyStore = KeyStore.getInstance(securityInfo.getName());
+	        	} else {
+	        		keyStore = KeyStore.getInstance(securityInfo.getName(), securityInfo.getProvider());
+	        	}
+	        	keyStore.load(new ByteArrayInputStream(securityInfo.getCert()),
+	        			securityInfo.getPassword().toCharArray());
+	        				
+	        	KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+	        	kmfactory.init(keyStore, securityInfo.getPassword().toCharArray());
+	        	KeyManager[] km = kmfactory.getKeyManagers();
+	
+	        	// create SSL socket factory
+	        	SSLContext sslContext = SSLContext.getInstance("TLS");
+	        	sslContext.init(km, null, null);
+	        	org.apache.http.conn.ssl.SSLSocketFactory sslSocketFactory = new org.apache.http.conn.ssl.SSLSocketFactory(sslContext);
+	     
+	        	Scheme https = new Scheme("https", 443, sslSocketFactory);
+	        	client.getConnectionManager().getSchemeRegistry().register(https);
+        	} catch( Exception e ) {
+        		throw new IllegalArgumentException(e);
+        	}
+        }
 
-            // Connection parameters
-            RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
-            if (timeout > 0) {
-                requestConfigBuilder
-                        .setConnectTimeout(timeout)
-                        .setSocketTimeout(timeout);
-            }
-
-            // Proxy settings
-            if (proxy != null) {
-                // XXX Didn't find the replacement for this deprecated method
-                client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
-            }
-
-            // SSL
-            if (this.sslContext != null) {
-                builder.setSslcontext(sslContext);
-            }
-
-            // Build the http client
-            builder.setDefaultRequestConfig(requestConfigBuilder.build());
-            client = builder.build();
+        if (timeout > 0) {
+            HttpParams params = client.getParams();
+            HttpConnectionParams.setConnectionTimeout(params, timeout);
+            HttpConnectionParams.setSoTimeout(params, timeout);
         }
 
         // Configure service

@@ -33,5 +33,4 @@ package com.notnoop.mpns;
 public interface MpnsDelegate {
     public void messageSent(MpnsNotification message, MpnsResponse response);
     public void messageFailed(MpnsNotification message, MpnsResponse response);
-    public void error(MpnsNotification message, Throwable e);
 }

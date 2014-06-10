@@ -78,7 +78,7 @@ public enum MpnsResponse {
      * subscription, and drop the subscription state for its corresponding
      * application session.
      */
-    EXPIRED(404, "Dropped", null, "Expired", false, false),
+    EXPIRED(404, null, null, "Expired", false, false),
 
     /**
      * Invalid method (PUT, DELETE, CREATE). Only POST is allowed when sending
@@ -110,7 +110,6 @@ public enum MpnsResponse {
      * use an exponential backoff algorithm in minute increments.
      */
     SERVICE_UNAVAILABLE(503, null, null, null, false, true);
-    
 
     //// Response Code,NotificationStatus,DeviceConnectionStatus,SubscriptionStatus,Comments
     private final int responseCode;
@@ -121,9 +120,7 @@ public enum MpnsResponse {
     private final boolean success;
     private final boolean shouldRetry;
 
-    MpnsResponse(
-            int responseCode, 
-            String notificationStatus,
+    MpnsResponse(int responseCode, String notificationStatus,
             String deviceConnectionStatus,
             String subscriptionStatus,
             boolean success,

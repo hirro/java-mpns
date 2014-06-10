@@ -52,16 +52,4 @@ public interface MpnsNotification {
     */
    public  List<? extends Entry<String, String>> getHttpHeaders();
 
-   /**
-    * Placeholder for the response code in case it is required to pass the result back to the caller.
-    * @return response code
-    */
-   public MpnsResponse getResponse();
-
-   /**
-    * Placeholder for the response code in case it is required to pass the result back to the caller.
-    * @param response response code
-    */
-   public void setResponse(MpnsResponse response);
-
 }

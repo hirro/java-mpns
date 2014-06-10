@@ -30,7 +30,6 @@
  */
 package com.notnoop.mpns.internal;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.http.HttpResponse;
@@ -57,24 +56,12 @@ public class MpnsPooledService extends AbstractMpnsService implements MpnsServic
     protected void push(final HttpPost request, final MpnsNotification message) {
         executor.execute(new Runnable() {
             public void run() {
-            	HttpResponse response = null;
                 try {
-                    response = httpClient.execute(request);
+                    HttpResponse response = httpClient.execute(request);
                     Utilities.fireDelegate(message, response, delegate);
+                    EntityUtils.consume(response.getEntity());
                 } catch (Exception e) {
-                	delegate.error(message, e);
-                } finally {
-                	//Release the connection
-                    try
-                    {
-                    	if(response != null) {
-                    		EntityUtils.consume(response.getEntity());
-                    	}
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    throw new RuntimeException(e);
                 }
             }
         });

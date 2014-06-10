@@ -30,15 +30,15 @@
  */
 package com.notnoop.mpns.notifications;
 
-import com.notnoop.mpns.DeliveryClass;
-import com.notnoop.mpns.MpnsNotification;
-import com.notnoop.mpns.SynchronizableMpnsNotification;
-import com.notnoop.mpns.internal.Utilities;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class RawNotification extends SynchronizableMpnsNotification {
+import com.notnoop.mpns.DeliveryClass;
+import com.notnoop.mpns.MpnsNotification;
+import com.notnoop.mpns.internal.Utilities;
+
+public class RawNotification implements MpnsNotification {
     private final byte[] body;
 
     private final List<? extends Entry<String, String>> headers;
@@ -50,12 +50,10 @@ public class RawNotification extends SynchronizableMpnsNotification {
         this.headers = headers;
     }
 
-    @Override
     public byte[] getRequestBody() {
         return body;
     }
 
-    @Override
     public List<? extends Entry<String, String>> getHttpHeaders() {
         return Collections.unmodifiableList(this.headers);
     }
