@@ -32,6 +32,30 @@ package com.notnoop.mpns;
 
 /**
  * Represents the logical response of MpnsService
+ * 
+ * The error codes are documented here 
+ * http://msdn.microsoft.com/en-us/library/windows/apps/hh465435.aspx
+ * http://msdn.microsoft.com/en-us/library/windowsphone/develop/ff941100(v=vs.105).aspx
+ * 
+ * X-NotificationStatus: (Received|Dropped|QueueFull)
+ *    Received
+ *    QueueFull
+ *    Dropped
+ * 
+ * X-WNS-DeviceConnectionStatus: (Connected|InActive|Disconnected|TempDisconnected)
+ *    Connected         In the Connected state the device has an active connection to the push notification server and 
+ *                      can receive notifications in real time.
+ *    TempDisconnected  In the Temp Disconnected state the device has transitioned to a temporary state where it has
+ *                      lost connectivity with the push notification server and will actively try and reconnect as soon
+ *                      as a valid internet connection is available on the device.
+ *    Disconnected      In the Disconnected state the device has been disconnected from the push notification server for
+ *                      more than 24 hours, but will still actively try to reconnect to the push notification server
+ *                      when a valid internet connection is available on the device.
+ *    InActive          Failed to find documentation.
+ * 
+ * X-SubscriptionStatus: (Active|Expired)
+ *    Active            TBD
+ *    Expired           TBD
  */
 public enum MpnsResponse {
     /*
@@ -40,8 +64,12 @@ public enum MpnsResponse {
     RECEIVED(200, "Received", "Connected", "Active", true, false),
 
     /**
-     * The notification request was accepted and queued for delivery. However,
-     * the device is temporarily disconnected.
+     * The notification was processed by WNS but the device is offline.
+     */
+    DISCONNECTED(200, "Received", "Disconnected", "Active", true, false),
+
+    /**
+     * The notification request was accepted and queued for delivery.
      */
     QUEUED(200, "Received", "TempDisconnected", "Active", true, false),
 
@@ -109,7 +137,14 @@ public enum MpnsResponse {
      * service should re-send the notification later. A best practice is to
      * use an exponential backoff algorithm in minute increments.
      */
-    SERVICE_UNAVAILABLE(503, null, null, null, false, true);
+    SERVICE_UNAVAILABLE(503, null, null, null, false, true),
+    
+   /**
+    * Undefined
+    * This is used for uninitialized responses and when we try to parse an error that does not fit above
+    * error matrix.
+    */
+    UNDEFINED(0, null, null, null, false, true);
 
     //// Response Code,NotificationStatus,DeviceConnectionStatus,SubscriptionStatus,Comments
     private final int responseCode;

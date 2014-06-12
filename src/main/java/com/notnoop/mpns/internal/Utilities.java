@@ -132,9 +132,10 @@ public final class Utilities {
         final String notificationStatus = headerValue(response, "X-NotificationStatus");
         final String deviceConnectionStatus = headerValue(response, "X-DeviceConnectionStatus");
         final String subscriptionStatus = headerValue(response, "X-SubscriptionStatus");
+        final int statusCode = response.getStatusLine().getStatusCode();
 
         for (MpnsResponse r: logicalResponses) {
-            if (r.getResponseCode() != response.getStatusLine().getStatusCode()) {
+            if (r.getResponseCode() != statusCode) {
                 continue;
             }
 
