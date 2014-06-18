@@ -40,6 +40,7 @@ import java.io.UnsupportedEncodingException;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.slf4j.LoggerFactory;
 
 public final class Utilities {
     private Utilities() { throw new AssertionError("Uninstantiable class"); }
@@ -48,6 +49,8 @@ public final class Utilities {
      * The content type "text/xml"
      */
     public static String XML_CONTENT_TYPE = "text/xml";
+
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Utilities.class);
 
     public static ThreadSafeClientConnManager poolManager(int maxConnections) {
         ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager();
@@ -158,8 +161,13 @@ public final class Utilities {
         }
 
         // Didn't find anything
-        assert false;
-        return null;
+        LOG.error(
+                "Unmatched error code - Notification status: [{}], Connection status: [{}], Subscription status: [{}], Status code: [{}]",
+                notificationStatus,
+                deviceConnectionStatus,
+                subscriptionStatus,
+                statusCode);
+        return MpnsResponse.UNDEFINED;
     }
 
     public static void fireDelegate(MpnsNotification message, HttpResponse response, MpnsDelegate delegate) {
