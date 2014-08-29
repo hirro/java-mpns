@@ -87,6 +87,15 @@ public enum MpnsResponse {
      * notification class.
      */
     SUPPRESSED(200, "Suppressed", null, "Active", false, false),
+    
+    
+    /***
+     * The push notification was received and dropped by the client.
+     * This occurs if application is configured to not run in background
+     * or if battery saving is enabled.
+     * This state doesn't seem to be documented yet.
+     */
+    DROPPED_BY_CLIENT(200, "Dropped", "Connected", "Active", false, false),
 
     /**
      * This error occurs when the web service sends a notification request
