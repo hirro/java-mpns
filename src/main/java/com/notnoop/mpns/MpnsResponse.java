@@ -88,7 +88,6 @@ public enum MpnsResponse {
      */
     SUPPRESSED(200, "Suppressed", null, "Active", false, false),
     
-    
     /***
      * The push notification was received and dropped by the client.
      * This occurs if application is configured to not run in background
