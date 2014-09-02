@@ -104,6 +104,67 @@ import com.notnoop.mpns.internal.Pair;
     }
 
     /**
+     * Sets the X-WNS-TTL property.
+     * 
+     * Specifies the TTL (expiration time) for a notification. 
+     * This is not typically needed, but can be used if you want to ensure that your notifications are not displayed
+     * later than a certain time. The TTL is specified in seconds and is relative to the time that WNS receives the
+     * request. 
+     * 
+     * When a TTL is specified, the device will not display the notification after that time. 
+     * Note that this could result in the notification never being shown at all if the TTL is too short. 
+     * In general, an expiration time will be measured in at least minutes.
+     * 
+     * This header is optional. 
+     * If no value is specified, the notification does not expire and will be replaced under the normal notification 
+     * replacement scheme.
+     *
+     * @param ttl the life span of the notification, in seconds, after WNS receives the request.
+     * @return  this
+     */
+    public A ttl(Long ttl) {
+        this.headers.add(Pair.of("X-WNS-TTL", Long.toString(ttl)));
+        return (A)this;
+    }
+    
+    /**
+     * Sets the X-WNS-Cache-Policy property.
+     * 
+     * When the notification target device is offline, WNS will cache one badge and one tile notification per app. 
+     * If notification cycling is enabled for the app, WNS will cache up to five tile notifications. 
+     * By default, raw notifications are not cached, but if raw notification caching is enabled, 
+     * one raw notification is cached. 
+     * Items are not held in the cache indefinitely and will be dropped after a reasonable period of time. 
+     * Otherwise, the cached content is delivered when the device next comes online.
+     * 
+     * This header is optional and should be used only in cases where the cloud service wants to override the
+     * default caching behavior
+     *
+     * @param enabled if true caching is enabled (default)
+     * @return  this
+     */
+    public A cache(boolean enabled) {
+        this.headers.add(Pair.of("X-WNS-Cache-Policy", enabled ? "cache" : "no-cache"));
+        return (A)this;
+    }
+    
+    /**
+     * Sets the X-WNS-RequestForStatus property.
+     * 
+     * Specifies whether the response should include the device status and WNS connection status.
+     * 
+     * The default value is false.
+     *
+     * @param enabled if true specifies that the response should include the device status and WNS connection status. 
+     *                else, do not return the device status and notification status.
+     * @return  this
+     */
+    public A requestForStatus(boolean enabled) {
+        this.headers.add(Pair.of("X-WNS-RequestForStatus", enabled ? "true" : "false"));
+        return (A)this;
+    }
+        
+    /**
      * Sets the notification channel URI that the registered callback message
      * will be sent to.
      *
